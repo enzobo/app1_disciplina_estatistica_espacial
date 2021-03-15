@@ -18,7 +18,7 @@ library(sp)
 library(rgdal)
 library(rsconnect)
 
-#years_ago = today() - years(4)
+#years_ago = today() - years(2)
 #crash_url = glue::glue("https://data.cityofchicago.org/Transportation/Traffic-Crashes-Crashes/85ca-t3if?$where=CRASH_DATE > '{years_ago}'")
 #crash_raw = as_tibble(read.socrata(crash_url))
 
@@ -26,7 +26,7 @@ library(rsconnect)
 #crash = crash_raw %>%
 #  arrange(desc(crash_date)) %>%
 #  transmute(
-#    injuries = as.factor(if_else(injuries_total > 0, 'Sim', 'Não')),
+#    injuries = as.factor(if_else(injuries_total > 0, 'S', 'N')),
 #    crash_date = as.Date(crash_date, format = "%D"),
 #    crash_hour,
 #    crash_year = year(crash_date),
@@ -47,7 +47,7 @@ library(rsconnect)
 #  .[!(.$longitude > -40),] %>%
 #  na.omit() 
 
-crash = read.csv("crash.csv")[-1] %>%
+crash = read.csv("./crash1.csv")[-1] %>%
     transmute(
         injuries,
         crash_date = as.Date(crash_date),
@@ -149,17 +149,17 @@ ui = navbarPage("Acidentes no Trânsito em Chicago", id = 'nav',
 
 server = function(input, output) {
     
-    pal = colorFactor(c("navy", "red"), domain = c('Sim', 'Não'))
+    pal = colorFactor(c("navy", "red"), domain = c('S', 'N'))
     
     df = reactive({
         if(input$type_m == 'Houve feridos'){
             subset(crash, crash_date >= input$range[1] & 
                        crash_date <= input$range[2] &
-                       injuries == 'Sim')}
+                       injuries == 'S')}
         else if(input$type_m == 'Não houve feridos'){
             subset(crash, crash_date >= input$range[1] & 
                        crash_date <= input$range[2] &
-                       injuries == 'Não')}
+                       injuries == 'N')}
         else if(input$type_m == 'Todos'){
             subset(crash, crash_date >= input$range[1] & 
                        crash_date <= input$range[2])}
@@ -366,11 +366,11 @@ server = function(input, output) {
             "Não houve feridos."
         } else {
             most = df() %>% count(crash_date,injuries) %>% subset(injuries == "Sim")
-            paste("O dia com o maior número de machucados foi", 
+            paste("O dia com o maior número de feridos foi", 
                   strong(most[which.max(most$n),1]),
                   "com", 
                   strong(max(most$n)),
-                  "feridos.") %>% HTML}
+                  "vítimas.") %>% HTML}
     })
     
     
@@ -386,9 +386,4 @@ server = function(input, output) {
 
 shinyApp(ui = ui, server = server)
 
-#setAccountInfo(name='enzobertoldi',
-               # token='FC5D34B2BC68F56B997B9D25D4019700',
-                #secret='avoQQPrhf+3vmdDCPBaMGawWqmz+QG5YDD4k0s+K')
-
-#deployApp()
 
